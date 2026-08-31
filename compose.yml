@@ -1,0 +1,76 @@
+services:
+
+  mysql:
+    image: mysql:8.4
+    container_name: dev-mysql
+    restart: "no"
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-default_db}
+      MYSQL_USER: ${MYSQL_USER:-developer}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secret}
+
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    networks:
+      - dev-network
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: dev-phpmyadmin
+    restart: "no"
+
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 256M
+
+    ports:
+      - "${PHPMYADMIN_PORT:-8080}:80"
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    networks:
+      - dev-network
+
+
+  redis:
+    image: redis:7-alpine
+    container_name: dev-redis
+    restart: "no"
+
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - dev-network
+
+    command: redis-server --appendonly yes
+
+
+networks:
+  dev-network:
+    name: dev-network
+    driver: bridge
+
+
+volumes:
+  mysql_data:
+  redis_data:
