@@ -62,7 +62,26 @@ services:
     networks:
       - dev-network
 
-    command: redis-server --appendonly yes
+
+  9router:
+    image: decolua/9router:latest
+    container_name: dev-9router
+    restart: "unless-stopped"
+
+    ports:
+      - "${NINE_ROUTER_PORT:-20128}:20128"
+
+    environment:
+      DATA_DIR: /app/data
+      PORT: 20128
+      HOSTNAME: 0.0.0.0
+      INITIAL_PASSWORD: ${NINE_ROUTER_PASSWORD}
+
+    volumes:
+      - 9router_data:/app/data
+
+    networks:
+      - dev-network
 
 
 networks:
@@ -74,3 +93,5 @@ networks:
 volumes:
   mysql_data:
   redis_data:
+  9router_data:
+
